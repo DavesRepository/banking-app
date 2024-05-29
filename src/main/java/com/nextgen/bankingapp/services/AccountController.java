@@ -6,6 +6,7 @@ import com.nextgen.bankingapp.services.database.SavingsAccountRepository;
 import com.nextgen.bankingapp.services.database.User;
 import com.nextgen.bankingapp.services.database.UserRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,12 +18,15 @@ import java.util.Optional;
 @RestController
 @AllArgsConstructor
 public class AccountController {
-  private final CurrentAccountRepository currentAccountRepository;
-  private final SavingsAccountRepository savingsAccountRepository;
-  private final UserRepository userRepository;
+  @Autowired
+  private CurrentAccountRepository currentAccountRepository;
+  @Autowired
+  private SavingsAccountRepository savingsAccountRepository;
+  @Autowired
+  private UserRepository userRepository;
 
   @GetMapping("/account/totalbalance/{username}")
-  public BigDecimal getTotalBalance(@PathVariable(name = "username")  String username){
+  public BigDecimal getTotalBalance(@PathVariable(name = "username")  String username) {
     final Optional<User> user = userRepository.findById(username);
     if (user.isPresent()) {
       final List<Account> currentAccounts =  currentAccountRepository.findByUser(user.get());

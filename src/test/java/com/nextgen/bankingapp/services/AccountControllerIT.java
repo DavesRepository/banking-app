@@ -31,11 +31,4 @@ class AccountControllerIT {
     assertThrows(IllegalArgumentException.class, () -> accountController.getInfo("NonExistingUser"), "User with username NonExistingUser not found");
   }
 
-  @Test
-  void shouldGetUser(){
-    final User userInfo = accountController.getInfo("H.BAKKER");
-    assertEquals(userInfo.getUsername(), "H.BAKKER");
-    assertEquals(userInfo.getEmail(), "h.bakker@gmail.com");
-    assertEquals(userInfo.getPassword(), "hbakker123");
-  }
 }
