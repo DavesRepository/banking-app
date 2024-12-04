@@ -1,4 +1,4 @@
-CREATE TABLE user (
+CREATE TABLE users(
      username varchar(255)  NOT NULL,
      email varchar(255)  NOT NULL,
      password varchar(255)  NOT NULL,
@@ -10,7 +10,7 @@ CREATE TABLE currentaccount (
       balance varchar(255)  NOT NULL,
       username varchar(255)  NOT NULL,
       PRIMARY KEY (accountnumber),
-      FOREIGN KEY (username) REFERENCES user(username)
+      FOREIGN KEY (username) REFERENCES users(username)
 );
 
 CREATE TABLE savingsaccount (
@@ -18,5 +18,5 @@ CREATE TABLE savingsaccount (
      balance varchar(255)  NOT NULL,
      username varchar(255)  NOT NULL,
      PRIMARY KEY (accountnumber),
-     FOREIGN KEY (username) REFERENCES user(username)
+     FOREIGN KEY (username) REFERENCES users(username)
 );
