@@ -19,7 +19,7 @@ public class SavingsAccount implements Account {
 
   @ManyToOne
   @JoinColumn(name = "username")
-  private User user;
+  private Users users;
 
   private BigDecimal balance;
 }

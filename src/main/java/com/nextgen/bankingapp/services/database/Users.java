@@ -10,7 +10,7 @@ import java.io.Serializable;
 @Entity
 @Getter
 @Setter
-public class User implements Serializable {
+public class Users implements Serializable {
   @Id
   private String username;
   private String email;

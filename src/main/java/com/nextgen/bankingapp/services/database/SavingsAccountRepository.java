@@ -7,5 +7,5 @@ import java.util.List;
 
 @Repository
 public interface SavingsAccountRepository extends JpaRepository<SavingsAccount, String> {
-  List<Account> findByUser(User user);
+  List<Account> findByUsers(Users users);
 }

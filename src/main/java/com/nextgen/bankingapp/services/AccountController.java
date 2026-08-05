@@ -3,9 +3,8 @@ package com.nextgen.bankingapp.services;
 import com.nextgen.bankingapp.services.database.Account;
 import com.nextgen.bankingapp.services.database.CurrentAccountRepository;
 import com.nextgen.bankingapp.services.database.SavingsAccountRepository;
-import com.nextgen.bankingapp.services.database.User;
+import com.nextgen.bankingapp.services.database.Users;
 import com.nextgen.bankingapp.services.database.UserRepository;
-import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,12 +25,12 @@ public class AccountController {
 
   @GetMapping("/account/totalbalance/{username}")
   public BigDecimal getTotalBalance(@PathVariable(name = "username")  String username) {
-    final Optional<User> user = userRepository.findById(username);
+    final Optional<Users> user = userRepository.findById(username);
     if (user.isPresent()) {
-      final List<Account> currentAccounts =  currentAccountRepository.findByUser(user.get());
+      final List<Account> currentAccounts =  currentAccountRepository.findByUsers(user.get());
       final BigDecimal totalCurrentAccountBalance = currentAccounts.stream().map(Account::getBalance).reduce(BigDecimal.ZERO, BigDecimal::add);
 
-      final List<Account> savingsAccounts = currentAccountRepository.findByUser(user.get());
+      final List<Account> savingsAccounts = currentAccountRepository.findByUsers(user.get());
       final BigDecimal totalSavingsAccountBalance = savingsAccounts.stream().map(Account::getBalance).reduce(BigDecimal.ZERO, BigDecimal::add);
 
       return totalCurrentAccountBalance.add(totalSavingsAccountBalance);
@@ -40,8 +39,8 @@ public class AccountController {
   }
 
   @GetMapping("/user/{username}")
-  public User getInfo(@PathVariable(name = "username")  String username){
-    final Optional<User> user = userRepository.findById(username);
+  public Users getInfo(@PathVariable(name = "username")  String username){
+    final Optional<Users> user = userRepository.findById(username);
     return user.orElse(null);
   }
 }

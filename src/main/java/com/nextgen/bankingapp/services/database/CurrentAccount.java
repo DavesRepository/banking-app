@@ -18,7 +18,7 @@ public class CurrentAccount implements Account {
 
   @ManyToOne
   @JoinColumn(name = "username")
-  private User user;
+  private Users users;
 
   private BigDecimal balance;
 }

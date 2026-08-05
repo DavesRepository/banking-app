@@ -1,6 +1,5 @@
 package com.nextgen.bankingapp.services;
 
-import com.nextgen.bankingapp.services.database.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

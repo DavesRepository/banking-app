@@ -8,5 +8,5 @@ import java.util.List;
 @Repository
 public interface CurrentAccountRepository extends JpaRepository<CurrentAccount, String> {
 
-  List<Account> findByUser(User user);
+  List<Account> findByUsers(Users users);
 }
