@@ -1,0 +1,36 @@
+{
+  "name": "NextGen Banking App",
+  "image": "mcr.microsoft.com/devcontainers/java:21",
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "21",
+      "installMaven": "true",
+      "installGradle": "false"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "vscjava.vscode-spring-boot-dashboard",
+        "vmware.vscode-spring-boot",
+        "vscjava.vscode-maven",
+        "ms-vsliveshare.vsliveshare"
+      ],
+      "settings": {
+        "java.configuration.updateBuildConfiguration": "automatic",
+        "java.compile.nullAnalysis.mode": "automatic",
+        "spring-boot.ls.java.home": "/usr/local/sdkman/candidates/java/current"
+      }
+    }
+  },
+  "postCreateCommand": "mvn dependency:resolve -q",
+  "forwardPorts": [8383, 8080],
+  "portsAttributes": {
+    "8383": {
+      "label": "Banking App",
+      "onAutoForward": "notify"
+    }
+  },
+  "remoteUser": "vscode"
+}
