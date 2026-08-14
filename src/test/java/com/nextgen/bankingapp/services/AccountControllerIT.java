@@ -24,13 +24,12 @@ class AccountControllerIT {
   @Test
   void getTotalBalance() {
     final BigDecimal totalBalance1 = accountController.getTotalBalance("J.OTTO");
-    assertEquals(totalBalance1, BigDecimal.valueOf(3000));
+    assertEquals(totalBalance1, BigDecimal.valueOf(2600));
 
     final BigDecimal totalBalance2 = accountController.getTotalBalance("D.WEERNINK");
     assertEquals(totalBalance2, BigDecimal.valueOf(3200));
   }
 
-  @Disabled("Created for future userstory")
   @Test
   void shouldReturnMaskedAccounts() {
     List<AccountDTO> accounts = accountController.getAccounts("D.WEERNINK");

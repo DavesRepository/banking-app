@@ -9,7 +9,6 @@ import com.nextgen.bankingapp.services.database.CurrentAccountRepository;
 import com.nextgen.bankingapp.services.database.SavingsAccountRepository;
 import com.nextgen.bankingapp.services.database.UserRepository;
 import com.nextgen.bankingapp.services.database.Users;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,16 +23,23 @@ import java.util.stream.Collectors;
 @RestController
 public class AccountController {
 
-  @Autowired
-  private CurrentAccountRepository currentAccountRepository;
-  @Autowired
-  private SavingsAccountRepository savingsAccountRepository;
-  @Autowired
-  private UserRepository userRepository;
-  @Autowired
-  private AccountMapper accountMapper;
-  @Autowired
-  private UserMapper userMapper;
+  private final CurrentAccountRepository currentAccountRepository;
+  private final SavingsAccountRepository savingsAccountRepository;
+  private final UserRepository userRepository;
+  private final AccountMapper accountMapper;
+  private final UserMapper userMapper;
+
+  public AccountController(CurrentAccountRepository currentAccountRepository,
+                            SavingsAccountRepository savingsAccountRepository,
+                            UserRepository userRepository,
+                            AccountMapper accountMapper,
+                            UserMapper userMapper) {
+    this.currentAccountRepository = currentAccountRepository;
+    this.savingsAccountRepository = savingsAccountRepository;
+    this.userRepository = userRepository;
+    this.accountMapper = accountMapper;
+    this.userMapper = userMapper;
+  }
 
   @GetMapping("/account/totalbalance/{username}")
   public BigDecimal getTotalBalance(@PathVariable(name = "username") String username) {
@@ -42,7 +48,7 @@ public class AccountController {
       final List<Account> currentAccounts = currentAccountRepository.findByUsers(user.get());
       final BigDecimal totalCurrentAccountBalance = currentAccounts.stream().map(Account::getBalance).reduce(BigDecimal.ZERO, BigDecimal::add);
 
-      final List<Account> savingsAccounts = currentAccountRepository.findByUsers(user.get());
+      final List<Account> savingsAccounts = savingsAccountRepository.findByUsers(user.get());
       final BigDecimal totalSavingsAccountBalance = savingsAccounts.stream().map(Account::getBalance).reduce(BigDecimal.ZERO, BigDecimal::add);
 
       return totalCurrentAccountBalance.add(totalSavingsAccountBalance);

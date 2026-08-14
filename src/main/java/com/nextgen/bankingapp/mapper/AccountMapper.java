@@ -12,6 +12,17 @@ public interface AccountMapper {
     AccountDTO toDTO(Account account);
 
     default String maskAccountNumber(String accountNumber) {
-        return accountNumber;
+        if (accountNumber == null || accountNumber.isBlank()) {
+            return accountNumber;
+        }
+        final String[] parts = accountNumber.split("\\.");
+        final StringBuilder masked = new StringBuilder();
+        for (int i = 0; i < parts.length; i++) {
+            if (i > 0) {
+                masked.append(".");
+            }
+            masked.append(i == parts.length - 1 ? parts[i] : "**");
+        }
+        return masked.toString();
     }
 }

@@ -5,12 +5,13 @@ import com.nextgen.bankingapp.services.database.CurrentAccount;
 import com.nextgen.bankingapp.services.database.CurrentAccountRepository;
 import com.nextgen.bankingapp.services.database.SavingsAccount;
 import com.nextgen.bankingapp.services.database.SavingsAccountRepository;
+import com.nextgen.bankingapp.mapper.AccountMapper;
+import com.nextgen.bankingapp.mapper.UserMapper;
 import com.nextgen.bankingapp.services.database.UserRepository;
 import com.nextgen.bankingapp.services.database.Users;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -24,13 +25,13 @@ public class AccountControllerTest {
         UserRepository userRepository = Mockito.mock(UserRepository.class);
         CurrentAccountRepository currentAccountRepository = Mockito.mock(CurrentAccountRepository.class);
         SavingsAccountRepository savingsAccountRepository = Mockito.mock(SavingsAccountRepository.class);
+        AccountMapper accountMapper = Mockito.mock(AccountMapper.class);
+        UserMapper userMapper = Mockito.mock(UserMapper.class);
 
-        AccountController accountController = new AccountController();
-        ReflectionTestUtils.setField(accountController, "currentAccountRepository", currentAccountRepository);
-        ReflectionTestUtils.setField(accountController, "savingsAccountRepository", savingsAccountRepository);
-        ReflectionTestUtils.setField(accountController, "userRepository", userRepository);
+        AccountController accountController = new AccountController(
+                currentAccountRepository, savingsAccountRepository, userRepository, accountMapper, userMapper);
 
-        final Users userName = createUsers("UserWith3000Total");
+        final Users userName = createUsers("UserWith2000Total");
         Mockito.when(userRepository.findById(Mockito.anyString())).thenReturn(Optional.of(userName));
 
         List<Account> currentAccounts = createAccounts("1000.00", "250.00", "250.00");
@@ -41,7 +42,7 @@ public class AccountControllerTest {
 
         BigDecimal totalBalance = accountController.getTotalBalance("UserWith2000Total");
 
-        Assertions.assertEquals(new BigDecimal("3000.00"), totalBalance);
+        Assertions.assertEquals(new BigDecimal("2000.00"), totalBalance);
     }
 
     private static Users createUsers(String userName) {
