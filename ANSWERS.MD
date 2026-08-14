@@ -252,3 +252,69 @@ Now builds the controller directly via `new AccountController(currentAccountRepo
 - `ANSWERS.MD` — this section
 
 Please re-run `mvn clean install` when you get a chance to confirm everything's green now.
+
+---
+
+## Round 3 — full BA-1246 refactor ("implement it like a senior would")
+
+Dave pushed round 2 to `answers`, branched `answers-addendum` off it, and asked for the BA-1246 review to actually be implemented: business logic in a service layer, split `AccountController`/`UserController`, and real REST semantics (404s, not a bare `BigDecimal`). This is everything from the BA-1246 "proposed refactor" section above, built out for real.
+
+### New package layout
+
+```
+com.nextgen.bankingapp
+├── controller/         AccountController, UserController        (HTTP only)
+├── service/            AccountService, UserService (+ Default* impls), AccountNumberMasker
+├── exception/          UserNotFoundException, ApiError, GlobalExceptionHandler
+├── dto/                AccountDTO, UserDTO, TotalBalanceDTO (new)
+├── mapper/              AccountMapper, UserMapper (MapStruct, unchanged responsibility)
+└── services.database/  Account, CurrentAccount(Repository), SavingsAccount(Repository), Users, UserRepository
+```
+
+`services.database` (entities/repositories) was deliberately left where it is — renaming that too would touch every file in the project for a naming cleanup that wasn't asked for. Flagging it as a further follow-up: it reads better as `repository`/`domain` than as a sub-package of a now-nonexistent `services` package.
+
+### Service layer
+
+- **`AccountService`** (interface) / **`DefaultAccountService`** — owns `getAccounts(username)` and `getTotalBalance(username)`. Both look the user up via `UserService` (which throws `UserNotFoundException` if missing — no more silent `BigDecimal.ZERO`/empty list), then fetch+combine current and savings accounts exactly once, so `getTotalBalance` and `getAccounts` share one aggregation path instead of two independently drifting ones (this is literally how the BA-1255 bug happened).
+- **`UserService`** (interface) / **`DefaultUserService`** — single `getUser(username)`, backed by a new `UserRepository.findByUsernameIgnoreCase(...)` derived query. This replaces the old `getInfo()`'s manual `findAll()` + loop (was loading the entire `users` table for a one-row lookup) while preserving its case-insensitive matching behavior, and is now shared by *both* controllers.
+- **`AccountNumberMasker`** — the BA-1245 masking rule, pulled out of the MapStruct mapper into a plain static utility with no Spring/MapStruct dependency. `AccountMapper` now just calls `AccountNumberMasker.mask(...)` via `@Mapper(imports = ...)`. A future gRPC service or GraphQL resolver can call the exact same method without depending on the REST-DTO mapping layer.
+
+### REST layer
+
+- **`AccountController`** — `GET /accounts/{username}` → `ResponseEntity<List<AccountDTO>>`; `GET /account/totalbalance/{username}` → `ResponseEntity<TotalBalanceDTO>` (new DTO: `{ "username": ..., "totalBalance": ... }`) instead of a bare `BigDecimal`. A raw number in a response body can't carry context and can't be extended later (currency, per-account breakdown, as-of date) without breaking every existing client — wrapping it in a small DTO now avoids an API break later.
+- **`UserController`** (new, split out of `AccountController`) — `GET /user/{username}` → `ResponseEntity<UserDTO>`, no more `Optional<UserDTO>` returned straight from a controller (Jackson serializes `Optional.empty()` as `null` with a `200`, which looks like a successful-but-empty response instead of "not found").
+- Both controllers are now pure HTTP adapters: parse the path variable, delegate to the service, map to a DTO, return `ResponseEntity.ok(...)`. No `if (user.isPresent())`, no manual empty-list/zero fallbacks anywhere.
+
+### 404s via a real exception, not a magic value
+
+`UserNotFoundException` (unchecked) is thrown from `DefaultUserService.getUser(...)` whenever a username doesn't resolve. `GlobalExceptionHandler` (`@RestControllerAdvice`) catches it once, for every endpoint, and returns `404 Not Found` with a uniform JSON body:
+
+```json
+{
+  "timestamp": "2026-08-14T10:15:30Z",
+  "status": 404,
+  "error": "Not Found",
+  "message": "User with username 'ghost' not found",
+  "path": "/user/ghost"
+}
+```
+
+This is the fix for the old `getInfo()` bug (`Optional.of(null)` → guaranteed `NullPointerException`) and for the `@Disabled("Should fix this")` test — both are properly resolved now, not just diagnosed.
+
+### Tests — moved to match the new layer they test
+
+- `AccountControllerTest`/`AccountControllerIT` (old, in `services` package, tested the controller directly) → replaced by:
+  - `service/DefaultAccountServiceTest`, `service/DefaultUserServiceTest` — plain Mockito unit tests of the business rules, no Spring context, no controller/mapper mocking needed. `DefaultAccountServiceTest` carries forward the corrected `2000.00` assertion from round 2.
+  - `controller/AccountControllerTest`, `controller/UserControllerTest` — plain Mockito unit tests that assert the controllers delegate correctly and return the right `ResponseEntity`/status code, and that a `UserNotFoundException` from the service isn't swallowed.
+  - `controller/AccountControllerIT`, `controller/UserControllerIT` — `@SpringBootTest` tests, one per controller, covering the real wiring (masking, balance totals against `data.sql`, and — now enabled — the not-found case, asserting `UserNotFoundException` instead of the old, wrong `IllegalArgumentException` expectation).
+  - `exception/GlobalExceptionHandlerTest` — new, asserts the 404 mapping and error body shape directly.
+
+### Still not done / explicitly out of scope this round
+
+- `services.database` package/entity renaming (see above).
+- The `VARCHAR` balance column and open security config from the BA-1246 review — unchanged, still worth their own tickets.
+- No `@ControllerAdvice` fallback for generic/unexpected exceptions (only `UserNotFoundException` is mapped) — worth adding a catch-all → 500 with the same `ApiError` shape before this goes anywhere near production.
+
+### Same build caveat as before
+
+I still can't run `mvn clean install` in my sandbox (Java 11 only, no Maven Central access), so this round is verified by careful reading and cross-referencing imports/package moves by hand rather than a green build. I re-grepped the whole `src` tree for any leftover references to the old `com.nextgen.bankingapp.services.AccountController` and `ReflectionTestUtils` — none found. Please run the build and let me know what comes back.
