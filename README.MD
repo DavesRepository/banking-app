@@ -66,3 +66,42 @@ Please be elaborate in your answer of how we can improve the quality; I am sure 
 use clean-code (SOLID?) principles and come with an extensive list of improvements for future 
 tickets.  
 
+#### BA-1270 Review: transfer money from a current account to a savings account
+
+In his last weeks our developer built a new feature with a lot of help from an AI assistant. 
+It is not in production yet. Customers should be able to move money from their own current account 
+to their own savings account:
+
+```
+POST http://localhost:8383/transfer
+Content-Type: application/json
+
+{
+  "username": "D.WEERNINK",
+  "fromAccount": "58.44.23.14",
+  "toAccount": "12.33.10.14",
+  "amount": 100
+}
+```
+
+The code is in `TransferController`, `TransferService` and `TransferServiceTest`. The test is green.
+
+Please review this as if it were a pull request. **Don't rewrite it**, tell us:
+- Would you approve it? If not, what has to change before it goes to production?
+- Order your findings: what is the most dangerous for a bank, and what is just "nice to have"?
+- Which tests are missing?
+
+You may use AI for the review. If you do, we are also interested in what the AI missed or got wrong.
+
+#### BA-1271 Review: customer support wants to search users by email
+
+Customer support asked for a quick way to find a customer by (part of) an email address.
+The same developer added:
+
+```
+GET http://localhost:8383/users/search?email=gmail
+```
+
+The code is in `UserSearchController`. Same question as BA-1270: would you approve this pull request,
+and why (not)?
+
